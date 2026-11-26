@@ -6,40 +6,47 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v5
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
+      - name: Set up Java 17
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Add Android SDK tools to PATH
+        run: |
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
 
-      - name: Install SDK
+      - name: Install Android SDK packages
         run: |
           yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Extract source
+      - name: Extract FAL AI source
         run: |
           unzip -q FAL_AI_0.1.0_Beta_Source_Fresh.zip -d source
+          test -f source/FAL_AI_Beta/settings.gradle.kts
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Build APK
+      - name: Build debug APK
         working-directory: source/FAL_AI_Beta
         run: gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: FAL-AI-APK
+          name: FAL-AI-0.1.0-beta-debug-apk
           path: source/FAL_AI_Beta/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
