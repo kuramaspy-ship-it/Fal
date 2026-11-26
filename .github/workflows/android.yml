@@ -1,4 +1,4 @@
-name: Build FAL AI APK
+name: Build FAL AI Syntax Studio Beta
 
 on:
   workflow_dispatch:
@@ -6,6 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
@@ -30,44 +31,23 @@ jobs:
           yes | sdkmanager --licenses
           sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Extract FAL AI source
+      - name: Extract Syntax Studio beta source
         run: |
-          unzip -q FAL_AI_0.1.0_Beta_Source_Fresh.zip -d source
+          unzip -q FAL_AI_Syntax_Studio_Beta_Source.zip -d source
           test -f source/FAL_AI_Beta/settings.gradle.kts
-
-      - name: Fix Java and Kotlin compatibility
-        working-directory: source/FAL_AI_Beta
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path("app/build.gradle.kts")
-          s = p.read_text()
-          s = s.replace(
-              '    defaultConfig {',
-              '''    compileOptions {
-                  sourceCompatibility = JavaVersion.VERSION_17
-                  targetCompatibility = JavaVersion.VERSION_17
-              }
-              kotlinOptions {
-                  jvmTarget = "17"
-              }
-              defaultConfig {'''
-          )
-          p.write_text(s)
-          PY
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Build debug APK
+      - name: Build release APK
         working-directory: source/FAL_AI_Beta
-        run: gradle assembleDebug
+        run: gradle assembleRelease
 
-      - name: Upload APK
+      - name: Upload release APK
         uses: actions/upload-artifact@v4
         with:
-          name: FAL-AI-0.1.0-beta-debug-apk
-          path: source/FAL_AI_Beta/app/build/outputs/apk/debug/*.apk
+          name: FAL-AI-Syntax-Studio-0.1.0-beta-RELEASE
+          path: source/FAL_AI_Beta/app/build/outputs/apk/release/*.apk
           if-no-files-found: error
