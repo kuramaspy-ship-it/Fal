@@ -35,6 +35,27 @@ jobs:
           unzip -q FAL_AI_0.1.0_Beta_Source_Fresh.zip -d source
           test -f source/FAL_AI_Beta/settings.gradle.kts
 
+      - name: Fix Java and Kotlin compatibility
+        working-directory: source/FAL_AI_Beta
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("app/build.gradle.kts")
+          s = p.read_text()
+          s = s.replace(
+              '    defaultConfig {',
+              '''    compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+              defaultConfig {'''
+          )
+          p.write_text(s)
+          PY
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
